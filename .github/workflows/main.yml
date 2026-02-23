@@ -1,0 +1,36 @@
+name: Force Copy KernelSU-Next Files
+
+on:
+  workflow_dispatch:
+
+jobs:
+  copy-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.LINKIT }}
+
+      - name: Clean your repo
+        run: |
+          # حذف كل الملفات باستثناء مجلدات git لضمان نظافة المستودع
+          find . -maxdepth 1 ! -name '.git' ! -name '.github' ! -name '.' -exec rm -rf {} +
+
+      - name: Download KernelSU-Next at specific commit
+        run: |
+          # تحميل الملفات كأرشيف بناءً على الـ Commit ID المحدد (eaab98b)
+          curl -L https://github.com/KernelSU-Next/KernelSU-Next/archive/eaab98b7ecb2b131f25b11972b49b2106683c6cc.tar.gz -o source.tar.gz
+          
+          # فك الضغط واستخراج الملفات مباشرة للمجلد الحالي
+          tar -xzf source.tar.gz --strip-components=1
+          rm source.tar.gz
+
+      - name: Commit and Force Push
+        run: |
+          git config --global user.name "Link2mem"
+          git config --global user.email "Were.aksle@gmail.com"
+          git add .
+          git commit -m "Force import KernelSU-Next files from commit eaab98b" || echo "No changes to commit"
+          # دفع التغييرات بالقوة (Force Push) للمستودع الخاص بك
+          git push origin main --force
